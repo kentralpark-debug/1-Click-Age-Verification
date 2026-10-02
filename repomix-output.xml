@@ -1,0 +1,1877 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+app/
+  routes/
+    _index/
+      route.jsx
+      styles.module.css
+    auth.login/
+      error.server.jsx
+      route.jsx
+    app._index.jsx
+    app.additional.jsx
+    app.jsx
+    auth.$.jsx
+    webhooks.app.scopes_update.jsx
+    webhooks.app.uninstalled.jsx
+  db.server.js
+  entry.server.jsx
+  root.jsx
+  routes.js
+  shopify.server.js
+extensions/
+  age-verification-ext/
+    blocks/
+      age_verifier.liquid
+    locales/
+      en.default.json
+    shopify.extension.toml
+  .gitkeep
+prisma/
+  migrations/
+    20240530213853_create_session_table/
+      migration.sql
+  schema.prisma
+public/
+  favicon.ico
+.dockerignore
+.editorconfig
+.eslintignore
+.eslintrc.cjs
+.gitignore
+.graphqlrc.js
+.npmrc
+.prettierignore
+AGENTS.md
+CHANGELOG.md
+CLAUDE.md
+Dockerfile
+env.d.ts
+package.json
+README.md
+remix.config.js
+shopify.app.toml
+shopify.web.toml
+tsconfig.json
+vite.config.js
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="app/routes/_index/route.jsx">
+import { redirect } from "@remix-run/node";
+import { Form, useLoaderData } from "@remix-run/react";
+import { login } from "../../shopify.server";
+import styles from "./styles.module.css";
+
+export const loader = async ({ request }) => {
+  const url = new URL(request.url);
+
+  if (url.searchParams.get("shop")) {
+    throw redirect(`/app?${url.searchParams.toString()}`);
+  }
+
+  return { showForm: Boolean(login) };
+};
+
+export default function App() {
+  const { showForm } = useLoaderData();
+
+  return (
+    <div className={styles.index}>
+      <div className={styles.content}>
+        <h1 className={styles.heading}>A short heading about [your app]</h1>
+        <p className={styles.text}>
+          A tagline about [your app] that describes your value proposition.
+        </p>
+        {showForm && (
+          <Form className={styles.form} method="post" action="/auth/login">
+            <label className={styles.label}>
+              <span>Shop domain</span>
+              <input className={styles.input} type="text" name="shop" />
+              <span>e.g: my-shop-domain.myshopify.com</span>
+            </label>
+            <button className={styles.button} type="submit">
+              Log in
+            </button>
+          </Form>
+        )}
+        <ul className={styles.list}>
+          <li>
+            <strong>Product feature</strong>. Some detail about your feature and
+            its benefit to your customer.
+          </li>
+          <li>
+            <strong>Product feature</strong>. Some detail about your feature and
+            its benefit to your customer.
+          </li>
+          <li>
+            <strong>Product feature</strong>. Some detail about your feature and
+            its benefit to your customer.
+          </li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="app/routes/_index/styles.module.css">
+.index {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  text-align: center;
+  padding: 1rem;
+}
+
+.heading,
+.text {
+  padding: 0;
+  margin: 0;
+}
+
+.text {
+  font-size: 1.2rem;
+  padding-bottom: 2rem;
+}
+
+.content {
+  display: grid;
+  gap: 2rem;
+}
+
+.form {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 0 auto;
+  gap: 1rem;
+}
+
+.label {
+  display: grid;
+  gap: 0.2rem;
+  max-width: 20rem;
+  text-align: left;
+  font-size: 1rem;
+}
+
+.input {
+  padding: 0.4rem;
+}
+
+.button {
+  padding: 0.4rem;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  padding-top: 3rem;
+  margin: 0;
+  display: flex;
+  gap: 2rem;
+}
+
+.list > li {
+  max-width: 20rem;
+  text-align: left;
+}
+
+@media only screen and (max-width: 50rem) {
+  .list {
+    display: block;
+  }
+
+  .list > li {
+    padding-bottom: 1rem;
+  }
+}
+</file>
+
+<file path="app/routes/auth.login/error.server.jsx">
+import { LoginErrorType } from "@shopify/shopify-app-remix/server";
+
+export function loginErrorMessage(loginErrors) {
+  if (loginErrors?.shop === LoginErrorType.MissingShop) {
+    return { shop: "Please enter your shop domain to log in" };
+  } else if (loginErrors?.shop === LoginErrorType.InvalidShop) {
+    return { shop: "Please enter a valid shop domain to log in" };
+  }
+
+  return {};
+}
+</file>
+
+<file path="app/routes/auth.login/route.jsx">
+import { useState } from "react";
+import { Form, useActionData, useLoaderData } from "@remix-run/react";
+import {
+  AppProvider as PolarisAppProvider,
+  Button,
+  Card,
+  FormLayout,
+  Page,
+  Text,
+  TextField,
+} from "@shopify/polaris";
+import polarisTranslations from "@shopify/polaris/locales/en.json";
+import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
+import { login } from "../../shopify.server";
+import { loginErrorMessage } from "./error.server";
+
+export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
+
+export const loader = async ({ request }) => {
+  const errors = loginErrorMessage(await login(request));
+
+  return { errors, polarisTranslations };
+};
+
+export const action = async ({ request }) => {
+  const errors = loginErrorMessage(await login(request));
+
+  return {
+    errors,
+  };
+};
+
+export default function Auth() {
+  const loaderData = useLoaderData();
+  const actionData = useActionData();
+  const [shop, setShop] = useState("");
+  const { errors } = actionData || loaderData;
+
+  return (
+    <PolarisAppProvider i18n={loaderData.polarisTranslations}>
+      <Page>
+        <Card>
+          <Form method="post">
+            <FormLayout>
+              <Text variant="headingMd" as="h2">
+                Log in
+              </Text>
+              <TextField
+                type="text"
+                name="shop"
+                label="Shop domain"
+                helpText="example.myshopify.com"
+                value={shop}
+                onChange={setShop}
+                autoComplete="on"
+                error={errors.shop}
+              />
+              <Button submit>Log in</Button>
+            </FormLayout>
+          </Form>
+        </Card>
+      </Page>
+    </PolarisAppProvider>
+  );
+}
+</file>
+
+<file path="app/routes/app._index.jsx">
+import { Page, Layout, Card, Text, BlockStack, InlineStack, TextField, Button, Divider } from "@shopify/polaris";
+import { useState } from "react";
+import { json } from "@remix-run/node";
+import { useLoaderData, useSubmit, useNavigation } from "@remix-run/react";
+import { authenticate } from "../shopify.server";
+import prisma from "../db.server";
+
+export const loader = async ({ request }) => {
+  const { session } = await authenticate.admin(request);
+  let setting = await prisma.appSetting.findUnique({ where: { shop: session.shop } });
+  if (!setting) {
+    setting = await prisma.appSetting.create({
+      data: { shop: session.shop }
+    });
+  }
+  return json({ setting });
+};
+
+export const action = async ({ request }) => {
+  const { session, admin } = await authenticate.admin(request);
+  const formData = await request.formData();
+  const isActive = formData.get("isActive") === "true";
+  
+  const data = {
+    isActive,
+    heading: formData.get("heading") || "",
+    subtext: formData.get("subtext") || "",
+    yesText: formData.get("yesText") || "",
+    noText: formData.get("noText") || "",
+    backgroundColor: formData.get("backgroundColor") || "",
+    textColor: formData.get("textColor") || "",
+    buttonColor: formData.get("buttonColor") || "",
+    redirectUrl: formData.get("redirectUrl") || "",
+  };
+
+  await prisma.appSetting.upsert({
+    where: { shop: session.shop },
+    update: data,
+    create: { shop: session.shop, ...data }
+  });
+
+  const shopRes = await admin.graphql(`{ shop { id } }`);
+  const shopData = await shopRes.json();
+  const shopId = shopData.data.shop.id;
+
+  await admin.graphql(`
+    mutation MetafieldsSet($metafields: [MetafieldsSetInput!]!) {
+      metafieldsSet(metafields: $metafields) {
+        userErrors { field message }
+      }
+    }`,
+    {
+      variables: {
+        metafields: [
+          {
+            namespace: "age_verification",
+            key: "settings",
+            type: "json",
+            value: JSON.stringify(data),
+            ownerId: shopId
+          }
+        ]
+      }
+    }
+  );
+
+  return json({ success: true });
+};
+
+export default function Index() {
+  const { setting } = useLoaderData();
+  const submit = useSubmit();
+  const navigation = useNavigation();
+  const isSaving = navigation.state === "submitting";
+
+  const [formState, setFormState] = useState({
+    ...setting,
+    isActive: String(setting.isActive)
+  });
+
+  const handleChange = (value, name) => {
+    setFormState((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSave = () => {
+    submit(formState, { method: "post" });
+  };
+
+  const isActiveBool = formState.isActive === "true";
+
+  return (
+    <Page
+      title="Age Verification Settings"
+      primaryAction={{ content: "Save", onAction: handleSave, loading: isSaving }}
+    >
+      <Layout>
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="400">
+              <Text as="h2" variant="headingMd">General Settings</Text>
+              <Button
+                onClick={() => handleChange(isActiveBool ? "false" : "true", "isActive")}
+                tone={isActiveBool ? "success" : "critical"}
+              >
+                {isActiveBool ? "App is ENABLED (Click to Disable)" : "App is DISABLED (Click to Enable)"}
+              </Button>
+              
+              <Divider />
+              <Text as="h2" variant="headingMd">Popup Content</Text>
+              <TextField label="Heading" value={formState.heading} onChange={(v) => handleChange(v, "heading")} autoComplete="off" />
+              <TextField label="Subtext" value={formState.subtext} onChange={(v) => handleChange(v, "subtext")} autoComplete="off" />
+              <TextField label="YES Button Text" value={formState.yesText} onChange={(v) => handleChange(v, "yesText")} autoComplete="off" />
+              <TextField label="NO Button Text" value={formState.noText} onChange={(v) => handleChange(v, "noText")} autoComplete="off" />
+              
+              <Divider />
+              <Text as="h2" variant="headingMd">Design & Colors (HEX format)</Text>
+              <InlineStack gap="400">
+                <TextField label="Background Color" value={formState.backgroundColor} onChange={(v) => handleChange(v, "backgroundColor")} autoComplete="off" />
+                <TextField label="Text Color" value={formState.textColor} onChange={(v) => handleChange(v, "textColor")} autoComplete="off" />
+                <TextField label="Button Color" value={formState.buttonColor} onChange={(v) => handleChange(v, "buttonColor")} autoComplete="off" />
+              </InlineStack>
+
+              <Divider />
+              <Text as="h2" variant="headingMd">Redirect (If NO is clicked)</Text>
+              <TextField label="Redirect URL" value={formState.redirectUrl} onChange={(v) => handleChange(v, "redirectUrl")} autoComplete="off" type="url" />
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+      </Layout>
+    </Page>
+  );
+}
+</file>
+
+<file path="app/routes/app.additional.jsx">
+import {
+  Box,
+  Card,
+  Layout,
+  Link,
+  List,
+  Page,
+  Text,
+  BlockStack,
+} from "@shopify/polaris";
+import { TitleBar } from "@shopify/app-bridge-react";
+
+export default function AdditionalPage() {
+  return (
+    <Page>
+      <TitleBar title="Additional page" />
+      <Layout>
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="300">
+              <Text as="p" variant="bodyMd">
+                The app template comes with an additional page which
+                demonstrates how to create multiple pages within app navigation
+                using{" "}
+                <Link
+                  url="https://shopify.dev/docs/apps/tools/app-bridge"
+                  target="_blank"
+                  removeUnderline
+                >
+                  App Bridge
+                </Link>
+                .
+              </Text>
+              <Text as="p" variant="bodyMd">
+                To create your own page and have it show up in the app
+                navigation, add a page inside <Code>app/routes</Code>, and a
+                link to it in the <Code>&lt;NavMenu&gt;</Code> component found
+                in <Code>app/routes/app.jsx</Code>.
+              </Text>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+        <Layout.Section variant="oneThird">
+          <Card>
+            <BlockStack gap="200">
+              <Text as="h2" variant="headingMd">
+                Resources
+              </Text>
+              <List>
+                <List.Item>
+                  <Link
+                    url="https://shopify.dev/docs/apps/design-guidelines/navigation#app-nav"
+                    target="_blank"
+                    removeUnderline
+                  >
+                    App nav best practices
+                  </Link>
+                </List.Item>
+              </List>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+      </Layout>
+    </Page>
+  );
+}
+
+function Code({ children }) {
+  return (
+    <Box
+      as="span"
+      padding="025"
+      paddingInlineStart="100"
+      paddingInlineEnd="100"
+      background="bg-surface-active"
+      borderWidth="025"
+      borderColor="border"
+      borderRadius="100"
+    >
+      <code>{children}</code>
+    </Box>
+  );
+}
+</file>
+
+<file path="app/routes/app.jsx">
+import { Link, Outlet, useLoaderData, useRouteError } from "@remix-run/react";
+import { boundary } from "@shopify/shopify-app-remix/server";
+import { AppProvider } from "@shopify/shopify-app-remix/react";
+import { NavMenu } from "@shopify/app-bridge-react";
+import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
+import { authenticate, MONTHLY_PLAN } from "../shopify.server";
+
+export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
+
+export const loader = async ({ request }) => {
+  const { billing } = await authenticate.admin(request);
+
+  // 課金プランのチェック（未加入なら課金承認画面へリダイレクト）
+  await billing.require({
+    plans: [MONTHLY_PLAN],
+    isTest: true,
+    onFailure: async () => billing.request({
+      plan: MONTHLY_PLAN,
+      isTest: true,
+    }),
+  });
+
+  return { apiKey: process.env.SHOPIFY_API_KEY || "" };
+};
+
+export default function App() {
+  const { apiKey } = useLoaderData();
+
+  return (
+    <AppProvider isEmbeddedApp apiKey={apiKey}>
+      <NavMenu>
+        <Link to="/app" rel="home">Home</Link>
+      </NavMenu>
+      <Outlet />
+    </AppProvider>
+  );
+}
+
+export function ErrorBoundary() {
+  return boundary.error(useRouteError());
+}
+
+export const headers = (headersArgs) => {
+  return boundary.headers(headersArgs);
+};
+</file>
+
+<file path="app/routes/auth.$.jsx">
+import { authenticate } from "../shopify.server";
+
+export const loader = async ({ request }) => {
+  await authenticate.admin(request);
+
+  return null;
+};
+</file>
+
+<file path="app/routes/webhooks.app.scopes_update.jsx">
+import { authenticate } from "../shopify.server";
+import db from "../db.server";
+
+export const action = async ({ request }) => {
+  const { payload, session, topic, shop } = await authenticate.webhook(request);
+
+  console.log(`Received ${topic} webhook for ${shop}`);
+  const current = payload.current;
+
+  if (session) {
+    await db.session.update({
+      where: {
+        id: session.id,
+      },
+      data: {
+        scope: current.toString(),
+      },
+    });
+  }
+
+  return new Response();
+};
+</file>
+
+<file path="app/routes/webhooks.app.uninstalled.jsx">
+import { authenticate } from "../shopify.server";
+import db from "../db.server";
+
+export const action = async ({ request }) => {
+  const { shop, session, topic } = await authenticate.webhook(request);
+
+  console.log(`Received ${topic} webhook for ${shop}`);
+
+  // Webhook requests can trigger multiple times and after an app has already been uninstalled.
+  // If this webhook already ran, the session may have been deleted previously.
+  if (session) {
+    await db.session.deleteMany({ where: { shop } });
+  }
+
+  return new Response();
+};
+</file>
+
+<file path="app/db.server.js">
+import { PrismaClient } from "@prisma/client";
+
+if (process.env.NODE_ENV !== "production") {
+  if (!global.prismaGlobal) {
+    global.prismaGlobal = new PrismaClient();
+  }
+}
+
+const prisma = global.prismaGlobal ?? new PrismaClient();
+
+export default prisma;
+</file>
+
+<file path="app/entry.server.jsx">
+import { PassThrough } from "stream";
+import { renderToPipeableStream } from "react-dom/server";
+import { RemixServer } from "@remix-run/react";
+import { createReadableStreamFromReadable } from "@remix-run/node";
+import { isbot } from "isbot";
+import { addDocumentResponseHeaders } from "./shopify.server";
+
+export const streamTimeout = 5000;
+
+export default async function handleRequest(
+  request,
+  responseStatusCode,
+  responseHeaders,
+  remixContext,
+) {
+  addDocumentResponseHeaders(request, responseHeaders);
+  const userAgent = request.headers.get("user-agent");
+  const callbackName = isbot(userAgent ?? "") ? "onAllReady" : "onShellReady";
+
+  return new Promise((resolve, reject) => {
+    const { pipe, abort } = renderToPipeableStream(
+      <RemixServer context={remixContext} url={request.url} />,
+      {
+        [callbackName]: () => {
+          const body = new PassThrough();
+          const stream = createReadableStreamFromReadable(body);
+
+          responseHeaders.set("Content-Type", "text/html");
+          resolve(
+            new Response(stream, {
+              headers: responseHeaders,
+              status: responseStatusCode,
+            }),
+          );
+          pipe(body);
+        },
+        onShellError(error) {
+          reject(error);
+        },
+        onError(error) {
+          responseStatusCode = 500;
+          console.error(error);
+        },
+      },
+    );
+
+    // Automatically timeout the React renderer after 6 seconds, which ensures
+    // React has enough time to flush down the rejected boundary contents
+    setTimeout(abort, streamTimeout + 1000);
+  });
+}
+</file>
+
+<file path="app/root.jsx">
+import {
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+} from "@remix-run/react";
+
+export default function App() {
+  return (
+    <html>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <link rel="preconnect" href="https://cdn.shopify.com/" />
+        <link
+          rel="stylesheet"
+          href="https://cdn.shopify.com/static/fonts/inter/v4/styles.css"
+        />
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <Outlet />
+        <ScrollRestoration />
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+</file>
+
+<file path="app/routes.js">
+import { flatRoutes } from "@remix-run/fs-routes";
+
+export default flatRoutes();
+</file>
+
+<file path="app/shopify.server.js">
+import "@shopify/shopify-app-remix/adapters/node";
+import {
+  ApiVersion,
+  AppDistribution,
+  shopifyApp,
+  BillingInterval,
+} from "@shopify/shopify-app-remix/server";
+import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
+import prisma from "./db.server";
+
+export const MONTHLY_PLAN = "Monthly Subscription";
+
+const shopify = shopifyApp({
+  apiKey: process.env.SHOPIFY_API_KEY,
+  apiSecretKey: process.env.SHOPIFY_API_SECRET || "",
+  apiVersion: ApiVersion.October24,
+  scopes: process.env.SCOPES?.split(","),
+  appUrl: process.env.SHOPIFY_APP_URL || "",
+  authPathPrefix: "/auth",
+  sessionStorage: new PrismaSessionStorage(prisma),
+  distribution: AppDistribution.AppStore,
+  billing: {
+    [MONTHLY_PLAN]: {
+      lineItems: [
+        {
+          amount: 4.99,
+          currencyCode: "USD",
+          interval: BillingInterval.Every30Days,
+        },
+      ],
+      trialDays: 7,
+    },
+  },
+  future: {
+    unstable_newEmbeddedAuthStrategy: true,
+    removeRest: true,
+    expiringOfflineAccessTokens: true,
+  },
+  ...(process.env.SHOP_CUSTOM_DOMAIN
+    ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }
+    : {}),
+});
+
+export default shopify;
+export const apiVersion = ApiVersion.October24;
+export const addDocumentResponseHeaders = shopify.addDocumentResponseHeaders;
+export const authenticate = shopify.authenticate;
+export const unauthenticated = shopify.unauthenticated;
+export const login = shopify.login;
+export const registerWebhooks = shopify.registerWebhooks;
+export const sessionStorage = shopify.sessionStorage;
+</file>
+
+<file path="extensions/age-verification-ext/blocks/age_verifier.liquid">
+{% if shop.metafields.age_verification.settings.value %}
+  {% assign settings = shop.metafields.age_verification.settings.value %}
+  {% if settings.isActive %}
+    <style>
+      #av-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background-color: {{ settings.backgroundColor }} !important;
+        z-index: 2147483647 !important;
+                flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+        padding: 20px !important;
+        box-sizing: border-box !important;
+      }
+      #av-overlay.av-hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .av-content {
+        text-align: center !important;
+        max-width: 500px !important;
+        width: 100% !important;
+      }
+      .av-heading {
+        color: {{ settings.textColor }} !important;
+        font-size: 32px !important;
+        font-weight: bold !important;
+        margin: 0 0 16px 0 !important;
+        line-height: 1.2 !important;
+      }
+      .av-subtext {
+        color: {{ settings.textColor }} !important;
+        font-size: 18px !important;
+        margin: 0 0 32px 0 !important;
+        line-height: 1.5 !important;
+      }
+      .av-buttons {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 16px !important;
+        width: 100% !important;
+      }
+      .av-btn {
+        appearance: none !important;
+        background-color: {{ settings.buttonColor }} !important;
+        color: {{ settings.backgroundColor }} !important;
+        border: 2px solid {{ settings.buttonColor }} !important;
+        padding: 16px 24px !important;
+        font-size: 18px !important;
+        font-weight: bold !important;
+        cursor: pointer !important;
+        border-radius: 8px !important;
+        width: 100% !important;
+        transition: opacity 0.2s !important;
+        text-decoration: none !important;
+        display: block !important;
+      }
+      .av-btn:hover {
+        opacity: 0.8 !important;
+      }
+      .av-btn-outline {
+        background-color: transparent !important;
+        color: {{ settings.buttonColor }} !important;
+      }
+    </style>
+
+    <div id="av-overlay" style="display: none;">
+      <div class="av-content">
+        <h2 class="av-heading">{{ settings.heading }}</h2>
+        <p class="av-subtext">{{ settings.subtext }}</p>
+        <div class="av-buttons">
+          <button id="av-btn-yes" class="av-btn">{{ settings.yesText }}</button>
+          <a id="av-btn-no" href="{{ settings.redirectUrl }}" class="av-btn av-btn-outline">{{ settings.noText }}</a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function() {
+        var cookieName = "av_verified";
+        var hasCookie = document.cookie.split('; ').find(row => row.startsWith(cookieName + '='));
+        
+        if (!hasCookie) {
+          var overlay = document.getElementById('av-overlay');
+          overlay.style.display = 'flex';
+          
+          document.getElementById('av-btn-yes').addEventListener('click', function() {
+            var date = new Date();
+            date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
+            document.cookie = cookieName + "=true; expires=" + date.toUTCString() + "; path=/";
+            
+            overlay.classList.add('av-hidden');
+            setTimeout(function() {
+              overlay.style.display = 'none';
+            }, 300);
+          });
+        }
+      })();
+    </script>
+  {% endif %}
+{% endif %}
+
+{% schema %}
+{
+  "name": "Age Verification",
+  "target": "body",
+  "settings": []
+}
+{% endschema %}
+</file>
+
+<file path="extensions/age-verification-ext/locales/en.default.json">
+{}
+</file>
+
+<file path="extensions/age-verification-ext/shopify.extension.toml">
+name = "age-verification-ext"
+type = "theme"
+uid = "92335169-dedc-5470-a116-e213a29706ebcebac14b"
+</file>
+
+<file path="extensions/.gitkeep">
+
+</file>
+
+<file path="prisma/migrations/20240530213853_create_session_table/migration.sql">
+-- CreateTable
+CREATE TABLE "Session" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "shop" TEXT NOT NULL,
+    "state" TEXT NOT NULL,
+    "isOnline" BOOLEAN NOT NULL DEFAULT false,
+    "scope" TEXT,
+    "expires" DATETIME,
+    "accessToken" TEXT NOT NULL,
+    "userId" BIGINT,
+    "firstName" TEXT,
+    "lastName" TEXT,
+    "email" TEXT,
+    "accountOwner" BOOLEAN NOT NULL DEFAULT false,
+    "locale" TEXT,
+    "collaborator" BOOLEAN DEFAULT false,
+    "emailVerified" BOOLEAN DEFAULT false,
+    "refreshToken" TEXT,
+    "refreshTokenExpires" DATETIME
+);
+</file>
+
+<file path="prisma/schema.prisma">
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+}
+
+model AppSetting {
+  shop             String   @id
+  isActive         Boolean  @default(true)
+  heading          String   @default("Age Verification")
+  subtext          String   @default("Are you 18 years of age or older?")
+  yesText          String   @default("Yes, I am 18+")
+  noText           String   @default("No, I am under 18")
+  backgroundColor  String   @default("#ffffff")
+  textColor        String   @default("#000000")
+  buttonColor      String   @default("#000000")
+  redirectUrl      String   @default("https://google.com")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+</file>
+
+<file path=".dockerignore">
+node_modules
+.git
+.shopify
+dev.sqlite
+dev.sqlite-journal
+extensions
+</file>
+
+<file path=".editorconfig">
+# editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+indent_size = 2
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Markdown syntax specifies that trailing whitespaces can be meaningful,
+# so let’s not trim those. e.g. 2 trailing spaces = linebreak (<br />)
+# See https://daringfireball.net/projects/markdown/syntax#p
+[*.md]
+trim_trailing_whitespace = false
+</file>
+
+<file path=".eslintignore">
+node_modules
+build
+public/build
+shopify-app-remix
+*/*.yml
+.shopify
+</file>
+
+<file path=".eslintrc.cjs">
+/** @type {import('@types/eslint').Linter.BaseConfig} */
+module.exports = {
+  root: true,
+  extends: [
+    "@remix-run/eslint-config",
+    "@remix-run/eslint-config/node",
+    "@remix-run/eslint-config/jest-testing-library",
+    "prettier",
+  ],
+  globals: {
+    shopify: "readonly"
+  },
+};
+</file>
+
+<file path=".gitignore">
+node_modules
+.DS_Store
+
+/.cache
+/build
+/app/build
+/public/build/
+/public/_dev
+/app/public/build
+/prisma/dev.sqlite
+/prisma/dev.sqlite-journal
+database.sqlite
+
+.env
+.env.*
+
+
+
+
+
+/extensions/*/dist
+
+# Ignore shopify files created during app dev
+.shopify/*
+.shopify.lock
+</file>
+
+<file path=".graphqlrc.js">
+import fs from "fs";
+import { ApiVersion } from "@shopify/shopify-api";
+import { shopifyApiProject, ApiType } from "@shopify/api-codegen-preset";
+function getConfig() {
+  const config = {
+    projects: {
+      default: shopifyApiProject({
+        apiType: ApiType.Admin,
+        apiVersion: ApiVersion.July25,
+        documents: [
+          "./app/**/*.{js,ts,jsx,tsx}",
+          "./app/.server/**/*.{js,ts,jsx,tsx}",
+        ],
+        outputDir: "./app/types",
+      }),
+    },
+  };
+  let extensions = [];
+  try {
+    extensions = fs.readdirSync("./extensions");
+  } catch {
+    // ignore if no extensions
+  }
+  for (const entry of extensions) {
+    const extensionPath = `./extensions/${entry}`;
+    const schema = `${extensionPath}/schema.graphql`;
+    if (!fs.existsSync(schema)) {
+      continue;
+    }
+    config.projects[entry] = {
+      schema,
+      documents: [`${extensionPath}/**/*.graphql`],
+    };
+  }
+  return config;
+}
+const config = getConfig();
+export default config;
+</file>
+
+<file path=".npmrc">
+engine-strict=true
+@shopify:registry=https://registry.npmjs.org
+</file>
+
+<file path=".prettierignore">
+package.json
+.shadowenv.d
+.vscode
+node_modules
+prisma
+public
+.shopify
+</file>
+
+<file path="AGENTS.md">
+# Shopify app development
+
+This app is scaffolded from a Shopify app template. See the README for framework-specific details.
+
+Use the [Shopify AI Toolkit](https://shopify.dev/docs/apps/build/ai-toolkit) for all Shopify API and platform work. If missing, install it in the agent host per that page (or `npx skills add Shopify/shopify-ai-toolkit --list` for skill-compatible hosts) — do not add tooling to this repo.
+</file>
+
+<file path="CHANGELOG.md">
+# @shopify/shopify-app-template-remix
+
+## 2025.12.11
+
+- [#1201](https://github.com/Shopify/shopify-app-template-remix/pull/1201) Update `@shopify/shopify-app-remix` to v4.1.0 and `@shopify/shopify-app-session-storage-prisma` to v8.0.0, add refresh token fields (`refreshToken` and `refreshTokenExpires`) to Session model in Prisma schema, and adopt the `expiringOfflineAccessTokens` flag for enhanced security through token rotation. See [expiring vs non-expiring offline tokens](https://shopify.dev/docs/apps/build/authentication-authorization/access-tokens/offline-access-tokens#expiring-vs-non-expiring-offline-tokens) for more information.
+
+## 2025.10.01
+
+**Remix is now React Router.** As of [React Router v7](https://remix.run/blog/merging-remix-and-react-router), Remix and React Router have merged.
+
+For new projects, use the **[Shopify App Template - React Router](https://github.com/Shopify/shopify-app-template-react-router)** instead.
+
+To migrate your existing Remix app, follow the **[migration guide](https://github.com/Shopify/shopify-app-template-react-router/wiki/Upgrading-from-Remix)**.
+
+## 2025.08.16
+- [#52](https://github.com/Shopify/shopify-app-template-remix/pull/1153) Use `ApiVersion.July25` rather than `LATEST_API_VERSION` in `.graphqlrc`.
+
+## 2025.07.07
+- [#1103](https://github.com/Shopify/shopify-app-template-remix/pull/1086) Remove deprecated .npmrc config values
+
+## 2025.06.12
+- [#1075](https://github.com/Shopify/shopify-app-template-remix/pull/1075) Add Shopify MCP to [VSCode configs](https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_enable-mcp-support-in-vs-code)
+
+## 2025.06.12
+-[#1082](https://github.com/Shopify/shopify-app-template-remix/pull/1082) Remove local Shopify CLI from the template. Developers should use the Shopify CLI [installed globally](https://shopify.dev/docs/api/shopify-cli#installation).
+## 2025.03.18
+-[#998](https://github.com/Shopify/shopify-app-template-remix/pull/998) Update to Vite 6
+
+## 2025.03.01
+- [#982](https://github.com/Shopify/shopify-app-template-remix/pull/982) Add Shopify Dev Assistant extension to the VSCode extension recommendations
+
+## 2025.01.31
+- [#952](https://github.com/Shopify/shopify-app-template-remix/pull/952) Update to Shopify App API v2025-01
+
+## 2025.01.23
+
+- [#923](https://github.com/Shopify/shopify-app-template-remix/pull/923) Update `@shopify/shopify-app-session-storage-prisma` to v6.0.0
+
+## 2025.01.8
+
+- [#923](https://github.com/Shopify/shopify-app-template-remix/pull/923) Enable GraphQL autocomplete for Javascript
+
+## 2024.12.19
+
+- [#904](https://github.com/Shopify/shopify-app-template-remix/pull/904) bump `@shopify/app-bridge-react` to latest
+-
+## 2024.12.18
+
+- [875](https://github.com/Shopify/shopify-app-template-remix/pull/875) Add Scopes Update Webhook
+## 2024.12.05
+
+- [#910](https://github.com/Shopify/shopify-app-template-remix/pull/910) Install `openssl` in Docker image to fix Prisma (see [#25817](https://github.com/prisma/prisma/issues/25817#issuecomment-2538544254))
+- [#907](https://github.com/Shopify/shopify-app-template-remix/pull/907) Move `@remix-run/fs-routes` to `dependencies` to fix Docker image build
+- [#899](https://github.com/Shopify/shopify-app-template-remix/pull/899) Disable v3_singleFetch flag
+- [#898](https://github.com/Shopify/shopify-app-template-remix/pull/898) Enable the `removeRest` future flag so new apps aren't tempted to use the REST Admin API.
+
+## 2024.12.04
+
+- [#891](https://github.com/Shopify/shopify-app-template-remix/pull/891) Enable remix future flags.
+
+## 2024.11.26
+- [888](https://github.com/Shopify/shopify-app-template-remix/pull/888) Update restResources version to 2024-10
+
+## 2024.11.06
+
+- [881](https://github.com/Shopify/shopify-app-template-remix/pull/881) Update to the productCreate mutation to use the new ProductCreateInput type
+
+## 2024.10.29
+
+- [876](https://github.com/Shopify/shopify-app-template-remix/pull/876) Update shopify-app-remix to v3.4.0 and shopify-app-session-storage-prisma to v5.1.5
+
+## 2024.10.02
+
+- [863](https://github.com/Shopify/shopify-app-template-remix/pull/863) Update to Shopify App API v2024-10 and shopify-app-remix v3.3.2
+
+## 2024.09.18
+
+- [850](https://github.com/Shopify/shopify-app-template-remix/pull/850) Removed "~" import alias
+
+## 2024.09.17
+
+- [842](https://github.com/Shopify/shopify-app-template-remix/pull/842) Move webhook processing to individual routes
+
+## 2024.08.19
+
+Replaced deprecated `productVariantUpdate` with `productVariantsBulkUpdate`
+
+## v2024.08.06
+
+Allow `SHOP_REDACT` webhook to process without admin context
+
+## v2024.07.16
+
+Started tracking changes and releases using calver
+</file>
+
+<file path="CLAUDE.md">
+@AGENTS.md
+</file>
+
+<file path="Dockerfile">
+FROM node:20-alpine
+
+WORKDIR /app
+
+# 依存関係のインストールに必要なファイルのみ先行コピー
+COPY package*.json ./
+COPY prisma ./prisma/
+
+RUN npm install
+
+# アプリケーション全体のコピー
+COPY . .
+
+# Prismaクライアント生成 ＆ 本番ビルド
+RUN npx prisma generate
+RUN npm run build
+
+# Cloud Run は PORT 環境変数を注入するため動的ポートに対応
+ENV PORT=3000
+EXPOSE 3000
+
+# 起動コマンド
+CMD ["npm", "run", "start"]
+</file>
+
+<file path="env.d.ts">
+/// <reference types="vite/client" />
+/// <reference types="@remix-run/node" />
+</file>
+
+<file path="package.json">
+{
+  "name": "age-verification",
+  "private": true,
+  "scripts": {
+    "build": "remix vite:build",
+    "dev": "shopify app dev",
+    "config:link": "shopify app config link",
+    "generate": "shopify app generate",
+    "deploy": "shopify app deploy",
+    "config:use": "shopify app config use",
+    "env": "shopify app env",
+    "start": "remix-serve ./build/server/index.js",
+    "docker-start": "npm run setup && npm run start",
+    "setup": "prisma generate && prisma migrate deploy",
+    "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
+    "shopify": "shopify",
+    "prisma": "prisma",
+    "graphql-codegen": "graphql-codegen",
+    "vite": "vite"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20.19 <22 || >=22.12"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.2.1",
+    "@remix-run/dev": "^2.16.1",
+    "@remix-run/fs-routes": "^2.16.1",
+    "@remix-run/node": "^2.16.1",
+    "@remix-run/react": "^2.16.1",
+    "@remix-run/serve": "^2.16.1",
+    "@shopify/app-bridge-react": "^4.1.6",
+    "@shopify/polaris": "^12.0.0",
+    "@shopify/shopify-app-remix": "^4.1.0",
+    "@shopify/shopify-app-session-storage-prisma": "^8.0.0",
+    "isbot": "^5.1.0",
+    "prisma": "^6.2.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "vite-tsconfig-paths": "^5.0.1"
+  },
+  "devDependencies": {
+    "@remix-run/eslint-config": "^2.16.1",
+    "@remix-run/route-config": "^2.16.1",
+    "@shopify/api-codegen-preset": "^1.1.1",
+    "@types/eslint": "^9.6.1",
+    "@types/node": "^22.2.0",
+    "@types/react": "^18.2.31",
+    "@types/react-dom": "^18.2.14",
+    "eslint": "^8.42.0",
+    "eslint-config-prettier": "^10.0.1",
+    "prettier": "^3.2.4",
+    "typescript": "^5.2.2",
+    "vite": "^6.2.2"
+  },
+  "workspaces": [
+    "extensions/*"
+  ],
+  "trustedDependencies": [
+    "@shopify/plugin-cloudflare"
+  ],
+  "resolutions": {
+    "@graphql-tools/url-loader": "8.0.16",
+    "@graphql-codegen/client-preset": "4.7.0",
+    "@graphql-codegen/typescript-operations": "4.5.0",
+    "minimatch": "9.0.5",
+    "vite": "^6.2.2"
+  },
+  "overrides": {
+    "@graphql-tools/url-loader": "8.0.16",
+    "@graphql-codegen/client-preset": "4.7.0",
+    "@graphql-codegen/typescript-operations": "4.5.0",
+    "minimatch": "9.0.5",
+    "vite": "^6.2.2"
+  },
+  "author": "MKtachikawa"
+}
+</file>
+
+<file path="README.md">
+# Shopify App Template - Remix
+
+> [!NOTE]
+> **Remix is now React Router.** As of [React Router v7](https://remix.run/blog/merging-remix-and-react-router), Remix and React Router have merged.
+> 
+> For new projects, use the **[Shopify App Template - React Router](https://github.com/Shopify/shopify-app-template-react-router)** instead.
+> 
+> To migrate your existing Remix app, follow the **[migration guide](https://github.com/Shopify/shopify-app-template-react-router/wiki/Upgrading-from-Remix)**.
+
+This is a template for building a [Shopify app](https://shopify.dev/docs/apps/getting-started) using the [Remix](https://remix.run) framework.
+
+Rather than cloning this repo, you can use your preferred package manager and the Shopify CLI with [these steps](https://shopify.dev/docs/apps/getting-started/create).
+
+Visit the [`shopify.dev` documentation](https://shopify.dev/docs/api/shopify-app-remix) for more details on the Remix app package.
+
+## Quick start
+
+### Prerequisites
+
+Before you begin, you'll need the following:
+
+1. **Node.js**: [Download and install](https://nodejs.org/en/download/) it if you haven't already.
+2. **Shopify Partner Account**: [Create an account](https://partners.shopify.com/signup) if you don't have one.
+3. **Test Store**: Set up either a [development store](https://help.shopify.com/en/partners/dashboard/development-stores#create-a-development-store) or a [Shopify Plus sandbox store](https://help.shopify.com/en/partners/dashboard/managing-stores/plus-sandbox-store) for testing your app.
+4. **Shopify CLI**: [Download and install](https://shopify.dev/docs/apps/tools/cli/getting-started) it if you haven't already.
+```shell
+npm install -g @shopify/cli@latest
+```
+
+### Setup
+
+```shell
+shopify app init --template=https://github.com/Shopify/shopify-app-template-remix
+```
+
+### Local Development
+
+```shell
+shopify app dev
+```
+
+
+
+Local development is powered by [the Shopify CLI](https://shopify.dev/docs/apps/tools/cli). It logs into your partners account, connects to an app, provides environment variables, updates remote config, creates a tunnel and provides commands to generate extensions.
+
+### Authenticating and querying data
+
+To authenticate and query data you can use the `shopify` const that is exported from `/app/shopify.server.js`:
+
+```js
+export async function loader({ request }) {
+  const { admin } = await shopify.authenticate.admin(request);
+
+  const response = await admin.graphql(`
+    {
+      products(first: 25) {
+        nodes {
+          title
+          description
+        }
+      }
+    }`);
+
+  const {
+    data: {
+      products: { nodes },
+    },
+  } = await response.json();
+
+  return nodes;
+}
+```
+
+This template comes preconfigured with examples of:
+
+1. Setting up your Shopify app in [/app/shopify.server.ts](https://github.com/Shopify/shopify-app-template-remix/blob/main/app/shopify.server.ts)
+2. Querying data using Graphql. Please see: [/app/routes/app.\_index.tsx](https://github.com/Shopify/shopify-app-template-remix/blob/main/app/routes/app._index.tsx).
+3. Responding to webhooks in individual files such as [/app/routes/webhooks.app.uninstalled.tsx](https://github.com/Shopify/shopify-app-template-remix/blob/main/app/routes/webhooks.app.uninstalled.tsx) and [/app/routes/webhooks.app.scopes_update.tsx](https://github.com/Shopify/shopify-app-template-remix/blob/main/app/routes/webhooks.app.scopes_update.tsx)
+
+Please read the [documentation for @shopify/shopify-app-remix](https://www.npmjs.com/package/@shopify/shopify-app-remix#authenticating-admin-requests) to understand what other API's are available.
+
+## Deployment
+
+### Application Storage
+
+This template uses [Prisma](https://www.prisma.io/) to store session data, by default using an [SQLite](https://www.sqlite.org/index.html) database.
+The database is defined as a Prisma schema in `prisma/schema.prisma`.
+
+This use of SQLite works in production if your app runs as a single instance.
+The database that works best for you depends on the data your app needs and how it is queried.
+You can run your database of choice on a server yourself or host it with a SaaS company.
+Here's a short list of databases providers that provide a free tier to get started:
+
+| Database   | Type             | Hosters                                                                                                                                                                                                                               |
+| ---------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MySQL      | SQL              | [Digital Ocean](https://www.digitalocean.com/products/managed-databases-mysql), [Planet Scale](https://planetscale.com/), [Amazon Aurora](https://aws.amazon.com/rds/aurora/), [Google Cloud SQL](https://cloud.google.com/sql/docs/mysql) |
+| PostgreSQL | SQL              | [Digital Ocean](https://www.digitalocean.com/products/managed-databases-postgresql), [Amazon Aurora](https://aws.amazon.com/rds/aurora/), [Google Cloud SQL](https://cloud.google.com/sql/docs/postgres)                                   |
+| Redis      | Key-value        | [Digital Ocean](https://www.digitalocean.com/products/managed-databases-redis), [Amazon MemoryDB](https://aws.amazon.com/memorydb/)                                                                                                        |
+| MongoDB    | NoSQL / Document | [Digital Ocean](https://www.digitalocean.com/products/managed-databases-mongodb), [MongoDB Atlas](https://www.mongodb.com/atlas/database)                                                                                                  |
+
+To use one of these, you can use a different [datasource provider](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#datasource) in your `schema.prisma` file, or a different [SessionStorage adapter package](https://github.com/Shopify/shopify-api-js/blob/main/packages/shopify-api/docs/guides/session-storage.md).
+
+### Build
+
+Remix handles building the app for you, by running the command below with the package manager of your choice:
+
+Using yarn:
+
+```shell
+yarn build
+```
+
+Using npm:
+
+```shell
+npm run build
+```
+
+Using pnpm:
+
+```shell
+pnpm run build
+```
+
+## Hosting
+
+When you're ready to set up your app in production, you can follow [our deployment documentation](https://shopify.dev/docs/apps/deployment/web) to host your app on a cloud provider like [Heroku](https://www.heroku.com/) or [Fly.io](https://fly.io/).
+
+When you reach the step for [setting up environment variables](https://shopify.dev/docs/apps/deployment/web#set-env-vars), you also need to set the variable `NODE_ENV=production`.
+
+### Hosting on Vercel
+
+Using the Vercel Preset is recommended when hosting your Shopify Remix app on Vercel. You'll also want to ensure imports that would normally come from `@remix-run/node` are imported from `@vercel/remix` instead. Learn more about hosting Remix apps on Vercel [here](https://vercel.com/docs/frameworks/remix).
+
+```diff
+// vite.config.ts
+import { vitePlugin as remix } from "@remix-run/dev";
+import { defineConfig, type UserConfig } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
++ import { vercelPreset } from '@vercel/remix/vite';
+
+installGlobals();
+
+export default defineConfig({
+  plugins: [
+    remix({
+      ignoredRouteFiles: ["**/.*"],
++     presets: [vercelPreset()],
+    }),
+    tsconfigPaths(),
+  ],
+});
+```
+
+## Troubleshooting
+
+### Database tables don't exist
+
+If you get this error:
+
+```
+The table `main.Session` does not exist in the current database.
+```
+
+You need to create the database for Prisma. Run the `setup` script in `package.json` using your preferred package manager.
+
+### Navigating/redirecting breaks an embedded app
+
+Embedded Shopify apps must maintain the user session, which can be tricky inside an iFrame. To avoid issues:
+
+1. Use `Link` from `@remix-run/react` or `@shopify/polaris`. Do not use `<a>`.
+2. Use the `redirect` helper returned from `authenticate.admin`. Do not use `redirect` from `@remix-run/node`
+3. Use `useSubmit` or `<Form/>` from `@remix-run/react`. Do not use a lowercase `<form/>`.
+
+This only applies if your app is embedded, which it will be by default.
+
+### Non Embedded
+
+Shopify apps are best when they are embedded in the Shopify Admin, which is how this template is configured. If you have a reason to not embed your app please make the following changes:
+
+1. Ensure `embedded = false` is set in [shopify.app.toml`](./shopify.app.toml). [Docs here](https://shopify.dev/docs/apps/build/cli-for-apps/app-configuration#global).
+2. Pass `isEmbeddedApp: false` to `shopifyApp()` in `./app/shopify.server.js|ts`.
+3. Change the `isEmbeddedApp` prop to `isEmbeddedApp={false}` for the `AppProvider` in `/app/routes/app.jsx|tsx`.
+4. Remove the `@shopify/app-bridge-react` dependency from [package.json](./package.json) and `vite.config.ts|js`.
+5. Remove anything imported from `@shopify/app-bridge-react`.  For example: `NavMenu`, `TitleBar` and `useAppBridge`.
+
+### OAuth goes into a loop when I change my app's scopes
+
+If you change your app's scopes and authentication goes into a loop and fails with a message from Shopify that it tried too many times, you might have forgotten to update your scopes with Shopify.
+To do that, you can run the `deploy` CLI command.
+
+Using yarn:
+
+```shell
+yarn deploy
+```
+
+Using npm:
+
+```shell
+npm run deploy
+```
+
+Using pnpm:
+
+```shell
+pnpm run deploy
+```
+
+### My shop-specific webhook subscriptions aren't updated
+
+If you are registering webhooks in the `afterAuth` hook, using `shopify.registerWebhooks`, you may find that your subscriptions aren't being updated.  
+
+Instead of using the `afterAuth` hook, the recommended approach is to declare app-specific webhooks in the `shopify.app.toml` file.  This approach is easier since Shopify will automatically update changes to webhook subscriptions every time you run `deploy` (e.g: `npm run deploy`).  Please read these guides to understand more:
+
+1. [app-specific vs shop-specific webhooks](https://shopify.dev/docs/apps/build/webhooks/subscribe#app-specific-subscriptions)
+2. [Create a subscription tutorial](https://shopify.dev/docs/apps/build/webhooks/subscribe/get-started?framework=remix&deliveryMethod=https)
+
+If you do need shop-specific webhooks, please keep in mind that the package calls `afterAuth` in 2 scenarios:
+
+- After installing the app
+- When an access token expires
+
+During normal development, the app won't need to re-authenticate most of the time, so shop-specific subscriptions aren't updated. To force your app to update the subscriptions, you can uninstall and reinstall it in your development store. That will force the OAuth process and call the `afterAuth` hook.
+
+### Admin created webhook failing HMAC validation
+
+Webhooks subscriptions created in the [Shopify admin](https://help.shopify.com/en/manual/orders/notifications/webhooks) will fail HMAC validation. This is because the webhook payload is not signed with your app's secret key.  There are 2 solutions:
+
+1. Use [app-specific webhooks](https://shopify.dev/docs/apps/build/webhooks/subscribe#app-specific-subscriptions) defined in your toml file instead (recommended)
+2. Create [webhook subscriptions](https://shopify.dev/docs/api/shopify-app-remix/v1/guide-webhooks) using the `shopifyApp` object.
+
+Test your webhooks with the [Shopify CLI](https://shopify.dev/docs/apps/tools/cli/commands#webhook-trigger) or by triggering events manually in the Shopify admin(e.g. Updating the product title to trigger a `PRODUCTS_UPDATE`).
+
+### Incorrect GraphQL Hints
+
+By default the [graphql.vscode-graphql](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql) extension for VS Code will assume that GraphQL queries or mutations are for the [Shopify Admin API](https://shopify.dev/docs/api/admin). This is a sensible default, but it may not be true if:
+
+1. You use another Shopify API such as the storefront API.
+2. You use a third party GraphQL API.
+
+in this situation, please update the [.graphqlrc.ts](https://github.com/Shopify/shopify-app-template-remix/blob/main/.graphqlrc.ts) config.
+
+### First parameter has member 'readable' that is not a ReadableStream.
+
+See [hosting on Vercel](#hosting-on-vercel).
+
+### Admin object undefined on webhook events triggered by the CLI
+
+When you trigger a webhook event using the Shopify CLI, the `admin` object will be `undefined`. This is because the CLI triggers an event with a valid, but non-existent, shop. The `admin` object is only available when the webhook is triggered by a shop that has installed the app.
+
+Webhooks triggered by the CLI are intended for initial experimentation testing of your webhook configuration. For more information on how to test your webhooks, see the [Shopify CLI documentation](https://shopify.dev/docs/apps/tools/cli/commands#webhook-trigger).
+
+### Using Defer & await for streaming responses
+
+To test [streaming using defer/await](https://remix.run/docs/en/main/guides/streaming) during local development you'll need to use the Shopify CLI slightly differently:
+
+1. First setup ngrok: https://ngrok.com/product/secure-tunnels
+2. Create an ngrok tunnel on port 8080: `ngrok http 8080`.
+3. Copy the forwarding address. This should be something like: `https://f355-2607-fea8-bb5c-8700-7972-d2b5-3f2b-94ab.ngrok-free.app`
+4. In a separate terminal run `yarn shopify app dev --tunnel-url=TUNNEL_URL:8080` replacing `TUNNEL_URL` for the address you copied in step 3.
+
+By default the CLI uses a cloudflare tunnel. Unfortunately it cloudflare tunnels wait for the Response stream to finish, then sends one chunk.
+
+This will not affect production, since tunnels are only for local development.
+
+### Using MongoDB and Prisma
+
+By default this template uses SQLlite as the database. It is recommended to move to a persisted database for production. If you choose to use MongoDB, you will need to make some modifications to the schema and prisma configuration. For more information please see the [Prisma MongoDB documentation](https://www.prisma.io/docs/orm/overview/databases/mongodb).
+
+Alternatively you can use a MongDB database directly with the [MongoDB session storage adapter](https://github.com/Shopify/shopify-app-js/tree/main/packages/apps/session-storage/shopify-app-session-storage-mongodb).
+
+#### Mapping the id field
+
+In MongoDB, an ID must be a single field that defines an @id attribute and a @map("\_id") attribute.
+The prisma adapter expects the ID field to be the ID of the session, and not the \_id field of the document.
+
+To make this work you can add a new field to the schema that maps the \_id field to the id field. For more information see the [Prisma documentation](https://www.prisma.io/docs/orm/prisma-schema/data-model/models#defining-an-id-field)
+
+```prisma
+model Session {
+  session_id  String    @id @default(auto()) @map("_id") @db.ObjectId
+  id          String    @unique
+...
+}
+```
+
+#### Error: The "mongodb" provider is not supported with this command
+
+MongoDB does not support the [prisma migrate](https://www.prisma.io/docs/orm/prisma-migrate/understanding-prisma-migrate/overview) command. Instead, you can use the [prisma db push](https://www.prisma.io/docs/orm/reference/prisma-cli-reference#db-push) command and update the `shopify.web.toml` file with the following commands. If you are using MongoDB please see the [Prisma documentation](https://www.prisma.io/docs/orm/overview/databases/mongodb) for more information.
+
+```toml
+[commands]
+predev = "npx prisma generate && npx prisma db push"
+dev = "npm exec remix vite:dev"
+```
+
+#### Prisma needs to perform transactions, which requires your mongodb server to be run as a replica set
+
+See the [Prisma documentation](https://www.prisma.io/docs/getting-started/setup-prisma/start-from-scratch/mongodb/connect-your-database-node-mongodb) for connecting to a MongoDB database.
+
+### I want to use Polaris v13.0.0 or higher
+
+Currently, this template is set up to work on node v18.20 or higher. However, `@shopify/polaris` is limited to v12 because v13 can only run on node v20+.
+
+You don't have to make any changes to the code in order to be able to upgrade Polaris to v13, but you'll need to do the following:
+
+- Upgrade your node version to v20.10 or higher.
+- Update your `Dockerfile` to pull `FROM node:20-alpine` instead of `node:18-alpine`
+
+### "nbf" claim timestamp check failed
+
+This error will occur of the `nbf` claim timestamp check failed. This is because the JWT token is expired.
+If you  are consistently getting this error, it could be that the clock on your machine is not in sync with the server.
+
+To fix this ensure you have enabled `Set time and date automatically` in the `Date and Time` settings on your computer.
+
+## Benefits
+
+Shopify apps are built on a variety of Shopify tools to create a great merchant experience.
+
+<!-- TODO: Uncomment this after we've updated the docs -->
+<!-- The [create an app](https://shopify.dev/docs/apps/getting-started/create) tutorial in our developer documentation will guide you through creating a Shopify app using this template. -->
+
+The Remix app template comes with the following out-of-the-box functionality:
+
+- [OAuth](https://github.com/Shopify/shopify-app-js/tree/main/packages/shopify-app-remix#authenticating-admin-requests): Installing the app and granting permissions
+- [GraphQL Admin API](https://github.com/Shopify/shopify-app-js/tree/main/packages/shopify-app-remix#using-the-shopify-admin-graphql-api): Querying or mutating Shopify admin data
+- [Webhooks](https://github.com/Shopify/shopify-app-js/tree/main/packages/shopify-app-remix#authenticating-webhook-requests): Callbacks sent by Shopify when certain events occur
+- [AppBridge](https://shopify.dev/docs/api/app-bridge): This template uses the next generation of the Shopify App Bridge library which works in unison with previous versions.
+- [Polaris](https://polaris.shopify.com/): Design system that enables apps to create Shopify-like experiences
+
+## Tech Stack
+
+This template uses [Remix](https://remix.run). The following Shopify tools are also included to ease app development:
+
+- [Shopify App Remix](https://shopify.dev/docs/api/shopify-app-remix) provides authentication and methods for interacting with Shopify APIs.
+- [Shopify App Bridge](https://shopify.dev/docs/apps/tools/app-bridge) allows your app to seamlessly integrate your app within Shopify's Admin.
+- [Polaris React](https://polaris.shopify.com/) is a powerful design system and component library that helps developers build high quality, consistent experiences for Shopify merchants.
+- [Webhooks](https://github.com/Shopify/shopify-app-js/tree/main/packages/shopify-app-remix#authenticating-webhook-requests): Callbacks sent by Shopify when certain events occur
+- [Polaris](https://polaris.shopify.com/): Design system that enables apps to create Shopify-like experiences
+
+## Resources
+
+- [Remix Docs](https://remix.run/docs/en/v1)
+- [Shopify App Remix](https://shopify.dev/docs/api/shopify-app-remix)
+- [Introduction to Shopify apps](https://shopify.dev/docs/apps/getting-started)
+- [App authentication](https://shopify.dev/docs/apps/auth)
+- [Shopify CLI](https://shopify.dev/docs/apps/tools/cli)
+- [App extensions](https://shopify.dev/docs/apps/app-extensions/list)
+- [Shopify Functions](https://shopify.dev/docs/api/functions)
+- [Getting started with internationalizing your app](https://shopify.dev/docs/apps/best-practices/internationalization/getting-started)
+</file>
+
+<file path="remix.config.js">
+// Related: https://github.com/remix-run/remix/issues/2835#issuecomment-1144102176
+// Replace the HOST env var with SHOPIFY_APP_URL so that it doesn't break the remix server. The CLI will eventually
+// stop passing in HOST, so we can remove this workaround after the next major release.
+if (
+  process.env.HOST &&
+  (!process.env.SHOPIFY_APP_URL ||
+    process.env.SHOPIFY_APP_URL === process.env.HOST)
+) {
+  process.env.SHOPIFY_APP_URL = process.env.HOST;
+  delete process.env.HOST;
+}
+
+/** @type {import('@remix-run/dev').AppConfig} */
+module.exports = {
+  ignoredRouteFiles: ["**/.*"],
+  appDirectory: "app",
+  serverModuleFormat: "cjs",
+  dev: { port: process.env.HMR_SERVER_PORT || 8002 },
+  future: {},
+};
+</file>
+
+<file path="shopify.web.toml">
+name = "remix"
+roles = ["frontend", "backend"]
+webhooks_path = "/webhooks/app/uninstalled"
+
+[commands]
+predev = "npx prisma generate"
+dev = "npx prisma migrate deploy && npm exec remix vite:dev"
+</file>
+
+<file path="tsconfig.json">
+{
+  "include": ["env.d.ts", "**/*.ts", "**/*.tsx"],
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "strict": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
+    "removeComments": false,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "target": "ES2022",
+    "baseUrl": ".",
+    "types": ["node"]
+  }
+}
+</file>
+
+<file path="vite.config.js">
+import { vitePlugin as remix } from "@remix-run/dev";
+import { installGlobals } from "@remix-run/node";
+import { defineConfig } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
+
+installGlobals({ nativeFetch: true });
+
+// Related: https://github.com/remix-run/remix/issues/2835#issuecomment-1144102176
+// Replace the HOST env var with SHOPIFY_APP_URL so that it doesn't break the remix server. The CLI will eventually
+// stop passing in HOST, so we can remove this workaround after the next major release.
+if (
+  process.env.HOST &&
+  (!process.env.SHOPIFY_APP_URL ||
+    process.env.SHOPIFY_APP_URL === process.env.HOST)
+) {
+  process.env.SHOPIFY_APP_URL = process.env.HOST;
+  delete process.env.HOST;
+}
+
+const host = new URL(process.env.SHOPIFY_APP_URL || "http://localhost")
+  .hostname;
+let hmrConfig;
+
+if (host === "localhost") {
+  hmrConfig = {
+    protocol: "ws",
+    host: "localhost",
+    port: 64999,
+    clientPort: 64999,
+  };
+} else {
+  hmrConfig = {
+    protocol: "wss",
+    host: host,
+    port: parseInt(process.env.FRONTEND_PORT) || 8002,
+    clientPort: 443,
+  };
+}
+
+export default defineConfig({
+  server: {
+    allowedHosts: [host],
+    cors: {
+      preflightContinue: true,
+    },
+    port: Number(process.env.PORT || 3000),
+    hmr: hmrConfig,
+    fs: {
+      // See https://vitejs.dev/config/server-options.html#server-fs-allow for more information
+      allow: ["app", "node_modules"],
+    },
+  },
+  plugins: [
+    remix({
+      ignoredRouteFiles: ["**/.*"],
+      future: {
+        v3_fetcherPersist: true,
+        v3_relativeSplatPath: true,
+        v3_throwAbortReason: true,
+        v3_lazyRouteDiscovery: true,
+        v3_singleFetch: false,
+        v3_routeConfig: true,
+      },
+    }),
+    tsconfigPaths(),
+  ],
+  build: {
+    assetsInlineLimit: 0,
+  },
+  optimizeDeps: {
+    include: ["@shopify/app-bridge-react", "@shopify/polaris"],
+  },
+});
+</file>
+
+<file path="shopify.app.toml">
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "7a6da0c87974dddbddbdc6669bc3b2bc"
+name = "age-verification"
+application_url = "https://example.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+
+[webhooks]
+api_version = "2027-01"
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/uninstalled"
+  topics = [ "app/uninstalled" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/app/scopes_update"
+  topics = [ "app/scopes_update" ]
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = ""
+
+[auth]
+redirect_urls = [ "https://example.com/api/auth" ]
+</file>
+
+</files>
