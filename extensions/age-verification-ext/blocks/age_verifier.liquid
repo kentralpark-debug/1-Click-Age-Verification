@@ -1,0 +1,116 @@
+{% if shop.metafields.age_verification.settings.value %}
+  {% assign settings = shop.metafields.age_verification.settings.value %}
+  {% if settings.isActive %}
+    <style>
+      #av-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background-color: {{ settings.backgroundColor }} !important;
+        z-index: 2147483647 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+        padding: 20px !important;
+        box-sizing: border-box !important;
+      }
+      #av-overlay.av-hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .av-content {
+        text-align: center !important;
+        max-width: 500px !important;
+        width: 100% !important;
+      }
+      .av-heading {
+        color: {{ settings.textColor }} !important;
+        font-size: 32px !important;
+        font-weight: bold !important;
+        margin: 0 0 16px 0 !important;
+        line-height: 1.2 !important;
+      }
+      .av-subtext {
+        color: {{ settings.textColor }} !important;
+        font-size: 18px !important;
+        margin: 0 0 32px 0 !important;
+        line-height: 1.5 !important;
+      }
+      .av-buttons {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 16px !important;
+        width: 100% !important;
+      }
+      .av-btn {
+        appearance: none !important;
+        background-color: {{ settings.buttonColor }} !important;
+        color: {{ settings.backgroundColor }} !important;
+        border: 2px solid {{ settings.buttonColor }} !important;
+        padding: 16px 24px !important;
+        font-size: 18px !important;
+        font-weight: bold !important;
+        cursor: pointer !important;
+        border-radius: 8px !important;
+        width: 100% !important;
+        transition: opacity 0.2s !important;
+        text-decoration: none !important;
+        display: block !important;
+      }
+      .av-btn:hover {
+        opacity: 0.8 !important;
+      }
+      .av-btn-outline {
+        background-color: transparent !important;
+        color: {{ settings.buttonColor }} !important;
+      }
+    </style>
+
+    <div id="av-overlay" style="display: none;">
+      <div class="av-content">
+        <h2 class="av-heading">{{ settings.heading }}</h2>
+        <p class="av-subtext">{{ settings.subtext }}</p>
+        <div class="av-buttons">
+          <button id="av-btn-yes" class="av-btn">{{ settings.yesText }}</button>
+          <a id="av-btn-no" href="{{ settings.redirectUrl }}" class="av-btn av-btn-outline">{{ settings.noText }}</a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function() {
+        var cookieName = "av_verified";
+        var hasCookie = document.cookie.split('; ').find(row => row.startsWith(cookieName + '='));
+        
+        if (!hasCookie) {
+          var overlay = document.getElementById('av-overlay');
+          overlay.style.display = 'flex';
+          
+          document.getElementById('av-btn-yes').addEventListener('click', function() {
+            var date = new Date();
+            date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
+            document.cookie = cookieName + "=true; expires=" + date.toUTCString() + "; path=/";
+            
+            overlay.classList.add('av-hidden');
+            setTimeout(function() {
+              overlay.style.display = 'none';
+            }, 300);
+          });
+        }
+      })();
+    </script>
+  {% endif %}
+{% endif %}
+
+{% schema %}
+{
+  "name": "Age Verification",
+  "target": "body",
+  "settings": []
+}
+{% endschema %}
