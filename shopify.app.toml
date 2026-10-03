@@ -24,4 +24,9 @@ api_version = "2027-01"
 scopes = ""
 
 [auth]
-redirect_urls = [ "https://age-verification-499228297904.asia-northeast1.run.app/api/auth" ]
+redirect_urls = [ "https://age-verification-499228297904.asia-northeast1.run.app/auth/callback", "https://age-verification-499228297904.asia-northeast1.run.app/auth/shopify/callback" ]
+
+[webhooks.privacy_compliance]
+customer_data_request_url = "https://age-verification-499228297904.asia-northeast1.run.app/webhooks/customers/data_request"
+customer_redact_url = "https://age-verification-499228297904.asia-northeast1.run.app/webhooks/customers/redact"
+shop_redact_url = "https://age-verification-499228297904.asia-northeast1.run.app/webhooks/shop/redact"
