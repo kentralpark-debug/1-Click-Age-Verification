@@ -2,7 +2,7 @@
 
 client_id = "7a6da0c87974dddbddbdc6669bc3b2bc"
 name = "age-verification"
-application_url = "https://example.com"
+application_url = "https://age-verification-499228297904.asia-northeast1.run.app"
 embedded = true
 
 [build]
@@ -24,4 +24,4 @@ api_version = "2027-01"
 scopes = ""
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [ "https://age-verification-499228297904.asia-northeast1.run.app/api/auth" ]
