@@ -9,7 +9,7 @@ embedded = true
 automatically_update_urls_on_dev = true
 
 [webhooks]
-api_version = "2027-01"
+api_version = "2026-10"
 
   [[webhooks.subscriptions]]
   uri = "/webhooks/app/uninstalled"
@@ -19,14 +19,21 @@ api_version = "2027-01"
   uri = "/webhooks/app/scopes_update"
   topics = [ "app/scopes_update" ]
 
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/customers/data_request"
+  compliance_topics = [ "customers/data_request" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/customers/redact"
+  compliance_topics = [ "customers/redact" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/shop/redact"
+  compliance_topics = [ "shop/redact" ]
+
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = ""
 
 [auth]
 redirect_urls = [ "https://age-verification-499228297904.asia-northeast1.run.app/auth/callback", "https://age-verification-499228297904.asia-northeast1.run.app/auth/shopify/callback" ]
-
-[webhooks.privacy_compliance]
-customer_data_request_url = "https://age-verification-499228297904.asia-northeast1.run.app/webhooks/customers/data_request"
-customer_redact_url = "https://age-verification-499228297904.asia-northeast1.run.app/webhooks/customers/redact"
-shop_redact_url = "https://age-verification-499228297904.asia-northeast1.run.app/webhooks/shop/redact"

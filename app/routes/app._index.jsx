@@ -1,9 +1,24 @@
 import { Page, Layout, Card, Text, BlockStack, InlineStack, TextField, Button, Divider } from "@shopify/polaris";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { json } from "@remix-run/node";
-import { useLoaderData, useSubmit, useNavigation } from "@remix-run/react";
+import { useLoaderData, useSubmit, useNavigation, useActionData } from "@remix-run/react";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
+
+const PRESET_COLORS = [
+  "#000000",
+  "#ffffff",
+  "#4b5563",
+  "#9ca3af",
+  "#dc2626",
+  "#ea580c",
+  "#d97706",
+  "#16a34a",
+  "#059669",
+  "#0284c7",
+  "#2563eb",
+  "#4f46e5"
+];
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
@@ -69,6 +84,7 @@ export const action = async ({ request }) => {
 
 export default function Index() {
   const { setting } = useLoaderData();
+  const actionData = useActionData();
   const submit = useSubmit();
   const navigation = useNavigation();
   const isSaving = navigation.state === "submitting";
@@ -77,6 +93,12 @@ export default function Index() {
     ...setting,
     isActive: String(setting.isActive)
   });
+
+  useEffect(() => {
+    if (actionData?.success) {
+      shopify.toast.show("Settings saved");
+    }
+  }, [actionData]);
 
   const handleChange = (value, name) => {
     setFormState((prev) => ({ ...prev, [name]: value }));
@@ -113,11 +135,74 @@ export default function Index() {
               <TextField label="NO Button Text" value={formState.noText} onChange={(v) => handleChange(v, "noText")} autoComplete="off" />
               
               <Divider />
-              <Text as="h2" variant="headingMd">Design & Colors (HEX format)</Text>
+              <Text as="h2" variant="headingMd">Design & Colors</Text>
               <InlineStack gap="400">
-                <TextField label="Background Color" value={formState.backgroundColor} onChange={(v) => handleChange(v, "backgroundColor")} autoComplete="off" />
-                <TextField label="Text Color" value={formState.textColor} onChange={(v) => handleChange(v, "textColor")} autoComplete="off" />
-                <TextField label="Button Color" value={formState.buttonColor} onChange={(v) => handleChange(v, "buttonColor")} autoComplete="off" />
+                <BlockStack gap="200">
+                  <TextField type="color" label="Background Color" value={formState.backgroundColor} onChange={(v) => handleChange(v, "backgroundColor")} autoComplete="off" />
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", maxWidth: "160px" }}>
+                    {PRESET_COLORS.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => handleChange(color, "backgroundColor")}
+                        style={{
+                          width: "20px",
+                          height: "20px",
+                          borderRadius: "50%",
+                          backgroundColor: color,
+                          border: formState.backgroundColor === color ? "2px solid #000" : "1px solid #d1d5db",
+                          cursor: "pointer",
+                          padding: 0,
+                          boxSizing: "border-box"
+                        }}
+                      />
+                    ))}
+                  </div>
+                </BlockStack>
+                <BlockStack gap="200">
+                  <TextField type="color" label="Text Color" value={formState.textColor} onChange={(v) => handleChange(v, "textColor")} autoComplete="off" />
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", maxWidth: "160px" }}>
+                    {PRESET_COLORS.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => handleChange(color, "textColor")}
+                        style={{
+                          width: "20px",
+                          height: "20px",
+                          borderRadius: "50%",
+                          backgroundColor: color,
+                          border: formState.textColor === color ? "2px solid #000" : "1px solid #d1d5db",
+                          cursor: "pointer",
+                          padding: 0,
+                          boxSizing: "border-box"
+                        }}
+                      />
+                    ))}
+                  </div>
+                </BlockStack>
+                <BlockStack gap="200">
+                  <TextField type="color" label="Button Color" value={formState.buttonColor} onChange={(v) => handleChange(v, "buttonColor")} autoComplete="off" />
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", maxWidth: "160px" }}>
+                    {PRESET_COLORS.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => handleChange(color, "buttonColor")}
+                        style={{
+                          width: "20px",
+                          height: "20px",
+                          borderRadius: "50%",
+                          backgroundColor: color,
+                          border: formState.buttonColor === color ? "2px solid #000" : "1px solid #d1d5db",
+                          cursor: "pointer",
+                          padding: 0,
+                          boxSizing: "border-box"
+                        }}
+                      />
+                    ))}
+                  </div>
+                </BlockStack>
               </InlineStack>
 
               <Divider />

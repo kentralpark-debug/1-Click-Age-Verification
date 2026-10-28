@@ -13,10 +13,10 @@ export const loader = async ({ request }) => {
   // 課金プランのチェック（未加入なら課金承認画面へリダイレクト）
   await billing.require({
     plans: [MONTHLY_PLAN],
-    isTest: true,
+    isTest: process.env.NODE_ENV !== "production",
     onFailure: async () => billing.request({
       plan: MONTHLY_PLAN,
-      isTest: true,
+      isTest: process.env.NODE_ENV !== "production",
     }),
   });
 

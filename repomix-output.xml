@@ -54,6 +54,9 @@ app/
     auth.$.jsx
     webhooks.app.scopes_update.jsx
     webhooks.app.uninstalled.jsx
+    webhooks.customers.data_request.jsx
+    webhooks.customers.redact.jsx
+    webhooks.shop.redact.jsx
   db.server.js
   entry.server.jsx
   root.jsx
@@ -323,6 +326,21 @@ import { useLoaderData, useSubmit, useNavigation } from "@remix-run/react";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
 
+const PRESET_COLORS = [
+  "#000000",
+  "#ffffff",
+  "#4b5563",
+  "#9ca3af",
+  "#dc2626",
+  "#ea580c",
+  "#d97706",
+  "#16a34a",
+  "#059669",
+  "#0284c7",
+  "#2563eb",
+  "#4f46e5"
+];
+
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
   let setting = await prisma.appSetting.findUnique({ where: { shop: session.shop } });
@@ -431,11 +449,74 @@ export default function Index() {
               <TextField label="NO Button Text" value={formState.noText} onChange={(v) => handleChange(v, "noText")} autoComplete="off" />
               
               <Divider />
-              <Text as="h2" variant="headingMd">Design & Colors (HEX format)</Text>
+              <Text as="h2" variant="headingMd">Design & Colors</Text>
               <InlineStack gap="400">
-                <TextField label="Background Color" value={formState.backgroundColor} onChange={(v) => handleChange(v, "backgroundColor")} autoComplete="off" />
-                <TextField label="Text Color" value={formState.textColor} onChange={(v) => handleChange(v, "textColor")} autoComplete="off" />
-                <TextField label="Button Color" value={formState.buttonColor} onChange={(v) => handleChange(v, "buttonColor")} autoComplete="off" />
+                <BlockStack gap="200">
+                  <TextField type="color" label="Background Color" value={formState.backgroundColor} onChange={(v) => handleChange(v, "backgroundColor")} autoComplete="off" />
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", maxWidth: "160px" }}>
+                    {PRESET_COLORS.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => handleChange(color, "backgroundColor")}
+                        style={{
+                          width: "20px",
+                          height: "20px",
+                          borderRadius: "50%",
+                          backgroundColor: color,
+                          border: formState.backgroundColor === color ? "2px solid #000" : "1px solid #d1d5db",
+                          cursor: "pointer",
+                          padding: 0,
+                          boxSizing: "border-box"
+                        }}
+                      />
+                    ))}
+                  </div>
+                </BlockStack>
+                <BlockStack gap="200">
+                  <TextField type="color" label="Text Color" value={formState.textColor} onChange={(v) => handleChange(v, "textColor")} autoComplete="off" />
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", maxWidth: "160px" }}>
+                    {PRESET_COLORS.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => handleChange(color, "textColor")}
+                        style={{
+                          width: "20px",
+                          height: "20px",
+                          borderRadius: "50%",
+                          backgroundColor: color,
+                          border: formState.textColor === color ? "2px solid #000" : "1px solid #d1d5db",
+                          cursor: "pointer",
+                          padding: 0,
+                          boxSizing: "border-box"
+                        }}
+                      />
+                    ))}
+                  </div>
+                </BlockStack>
+                <BlockStack gap="200">
+                  <TextField type="color" label="Button Color" value={formState.buttonColor} onChange={(v) => handleChange(v, "buttonColor")} autoComplete="off" />
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", maxWidth: "160px" }}>
+                    {PRESET_COLORS.map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => handleChange(color, "buttonColor")}
+                        style={{
+                          width: "20px",
+                          height: "20px",
+                          borderRadius: "50%",
+                          backgroundColor: color,
+                          border: formState.buttonColor === color ? "2px solid #000" : "1px solid #d1d5db",
+                          cursor: "pointer",
+                          padding: 0,
+                          boxSizing: "border-box"
+                        }}
+                      />
+                    ))}
+                  </div>
+                </BlockStack>
               </InlineStack>
 
               <Divider />
@@ -638,6 +719,40 @@ export const action = async ({ request }) => {
 };
 </file>
 
+<file path="app/routes/webhooks.customers.data_request.jsx">
+import { authenticate } from "../shopify.server";
+
+export const action = async ({ request }) => {
+  const { shop, topic } = await authenticate.webhook(request);
+  console.log(`Received ${topic} webhook for ${shop}`);
+  return new Response();
+};
+</file>
+
+<file path="app/routes/webhooks.customers.redact.jsx">
+import { authenticate } from "../shopify.server";
+
+export const action = async ({ request }) => {
+  const { shop, topic } = await authenticate.webhook(request);
+  console.log(`Received ${topic} webhook for ${shop}`);
+  return new Response();
+};
+</file>
+
+<file path="app/routes/webhooks.shop.redact.jsx">
+import { authenticate } from "../shopify.server";
+import db from "../db.server";
+
+export const action = async ({ request }) => {
+  const { shop, topic } = await authenticate.webhook(request);
+  console.log(`Received ${topic} webhook for ${shop}`);
+  if (shop) {
+    await db.session.deleteMany({ where: { shop } });
+  }
+  return new Response();
+};
+</file>
+
 <file path="app/db.server.js">
 import { PrismaClient } from "@prisma/client";
 
@@ -743,178 +858,6 @@ export default function App() {
 import { flatRoutes } from "@remix-run/fs-routes";
 
 export default flatRoutes();
-</file>
-
-<file path="app/shopify.server.js">
-import "@shopify/shopify-app-remix/adapters/node";
-import {
-  ApiVersion,
-  AppDistribution,
-  shopifyApp,
-  BillingInterval,
-} from "@shopify/shopify-app-remix/server";
-import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
-import prisma from "./db.server";
-
-export const MONTHLY_PLAN = "Monthly Subscription";
-
-const shopify = shopifyApp({
-  apiKey: process.env.SHOPIFY_API_KEY,
-  apiSecretKey: process.env.SHOPIFY_API_SECRET || "",
-  apiVersion: ApiVersion.October24,
-  scopes: process.env.SCOPES?.split(","),
-  appUrl: process.env.SHOPIFY_APP_URL || "",
-  authPathPrefix: "/auth",
-  sessionStorage: new PrismaSessionStorage(prisma),
-  distribution: AppDistribution.AppStore,
-  billing: {
-    [MONTHLY_PLAN]: {
-      lineItems: [
-        {
-          amount: 4.99,
-          currencyCode: "USD",
-          interval: BillingInterval.Every30Days,
-        },
-      ],
-      trialDays: 7,
-    },
-  },
-  future: {
-    unstable_newEmbeddedAuthStrategy: true,
-    removeRest: true,
-    expiringOfflineAccessTokens: true,
-  },
-  ...(process.env.SHOP_CUSTOM_DOMAIN
-    ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }
-    : {}),
-});
-
-export default shopify;
-export const apiVersion = ApiVersion.October24;
-export const addDocumentResponseHeaders = shopify.addDocumentResponseHeaders;
-export const authenticate = shopify.authenticate;
-export const unauthenticated = shopify.unauthenticated;
-export const login = shopify.login;
-export const registerWebhooks = shopify.registerWebhooks;
-export const sessionStorage = shopify.sessionStorage;
-</file>
-
-<file path="extensions/age-verification-ext/blocks/age_verifier.liquid">
-{% if shop.metafields.age_verification.settings.value %}
-  {% assign settings = shop.metafields.age_verification.settings.value %}
-  {% if settings.isActive %}
-    <style>
-      #av-overlay {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        background-color: {{ settings.backgroundColor }} !important;
-        z-index: 2147483647 !important;
-                flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        opacity: 1;
-        transition: opacity 0.3s ease;
-        padding: 20px !important;
-        box-sizing: border-box !important;
-      }
-      #av-overlay.av-hidden {
-        opacity: 0;
-        pointer-events: none;
-      }
-      .av-content {
-        text-align: center !important;
-        max-width: 500px !important;
-        width: 100% !important;
-      }
-      .av-heading {
-        color: {{ settings.textColor }} !important;
-        font-size: 32px !important;
-        font-weight: bold !important;
-        margin: 0 0 16px 0 !important;
-        line-height: 1.2 !important;
-      }
-      .av-subtext {
-        color: {{ settings.textColor }} !important;
-        font-size: 18px !important;
-        margin: 0 0 32px 0 !important;
-        line-height: 1.5 !important;
-      }
-      .av-buttons {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 16px !important;
-        width: 100% !important;
-      }
-      .av-btn {
-        appearance: none !important;
-        background-color: {{ settings.buttonColor }} !important;
-        color: {{ settings.backgroundColor }} !important;
-        border: 2px solid {{ settings.buttonColor }} !important;
-        padding: 16px 24px !important;
-        font-size: 18px !important;
-        font-weight: bold !important;
-        cursor: pointer !important;
-        border-radius: 8px !important;
-        width: 100% !important;
-        transition: opacity 0.2s !important;
-        text-decoration: none !important;
-        display: block !important;
-      }
-      .av-btn:hover {
-        opacity: 0.8 !important;
-      }
-      .av-btn-outline {
-        background-color: transparent !important;
-        color: {{ settings.buttonColor }} !important;
-      }
-    </style>
-
-    <div id="av-overlay" style="display: none;">
-      <div class="av-content">
-        <h2 class="av-heading">{{ settings.heading }}</h2>
-        <p class="av-subtext">{{ settings.subtext }}</p>
-        <div class="av-buttons">
-          <button id="av-btn-yes" class="av-btn">{{ settings.yesText }}</button>
-          <a id="av-btn-no" href="{{ settings.redirectUrl }}" class="av-btn av-btn-outline">{{ settings.noText }}</a>
-        </div>
-      </div>
-    </div>
-
-    <script>
-      (function() {
-        var cookieName = "av_verified";
-        var hasCookie = document.cookie.split('; ').find(row => row.startsWith(cookieName + '='));
-        
-        if (!hasCookie) {
-          var overlay = document.getElementById('av-overlay');
-          overlay.style.display = 'flex';
-          
-          document.getElementById('av-btn-yes').addEventListener('click', function() {
-            var date = new Date();
-            date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
-            document.cookie = cookieName + "=true; expires=" + date.toUTCString() + "; path=/";
-            
-            overlay.classList.add('av-hidden');
-            setTimeout(function() {
-              overlay.style.display = 'none';
-            }, 300);
-          });
-        }
-      })();
-    </script>
-  {% endif %}
-{% endif %}
-
-{% schema %}
-{
-  "name": "Age Verification",
-  "target": "body",
-  "settings": []
-}
-{% endschema %}
 </file>
 
 <file path="extensions/age-verification-ext/locales/en.default.json">
@@ -1844,12 +1787,205 @@ export default defineConfig({
 });
 </file>
 
+<file path="app/shopify.server.js">
+import "@shopify/shopify-app-remix/adapters/node";
+import {
+  ApiVersion,
+  AppDistribution,
+  shopifyApp,
+  BillingInterval,
+} from "@shopify/shopify-app-remix/server";
+import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
+import prisma from "./db.server";
+
+export const MONTHLY_PLAN = "Monthly Subscription";
+
+const shopify = shopifyApp({
+  apiKey: process.env.SHOPIFY_API_KEY,
+  apiSecretKey: process.env.SHOPIFY_API_SECRET || "",
+  apiVersion: ApiVersion.October24,
+  scopes: process.env.SCOPES?.split(","),
+  appUrl: process.env.SHOPIFY_APP_URL || "",
+  authPathPrefix: "/auth",
+  sessionStorage: new PrismaSessionStorage(prisma),
+  distribution: AppDistribution.AppStore,
+  billing: {
+    [MONTHLY_PLAN]: {
+      lineItems: [
+        {
+          amount: 4.99,
+          currencyCode: "USD",
+          interval: BillingInterval.Every30Days,
+        },
+      ],
+      trialDays: 7,
+    },
+  },
+  future: {
+    unstable_newEmbeddedAuthStrategy: true,
+    removeRest: true,
+    expiringOfflineAccessTokens: true,
+  },
+  ...(process.env.SHOP_CUSTOM_DOMAIN
+    ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }
+    : {}),
+});
+
+export default shopify;
+export const apiVersion = ApiVersion.October24;
+export const addDocumentResponseHeaders = shopify.addDocumentResponseHeaders;
+export const authenticate = shopify.authenticate;
+export const unauthenticated = shopify.unauthenticated;
+export const login = shopify.login;
+export const registerWebhooks = shopify.registerWebhooks;
+export const sessionStorage = shopify.sessionStorage;
+</file>
+
+<file path="extensions/age-verification-ext/blocks/age_verifier.liquid">
+{% assign settings = shop.metafields.age_verification.settings.value %}
+
+{% assign heading = settings.heading | default: "Age Verification" %}
+{% assign subtext = settings.subtext | default: "Are you 18 years of age or older?" %}
+{% assign yes_text = settings.yesText | default: "Yes, I am 18+" %}
+{% assign no_text = settings.noText | default: "No, I am under 18" %}
+{% assign bg_color = settings.backgroundColor | default: "#ffffff" %}
+{% assign text_color = settings.textColor | default: "#000000" %}
+{% assign button_color = settings.buttonColor | default: "#000000" %}
+{% assign redirect_url = settings.redirectUrl | default: "https://google.com" %}
+
+<!-- AV DEBUG: settings = {{ settings | json }} -->
+
+<style>
+  #av-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background-color: rgba(0, 0, 0, 0.65) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    z-index: 2147483647 !important;
+    display: none;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    padding: 20px !important;
+    box-sizing: border-box !important;
+  }
+  #av-overlay.av-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .av-content {
+    text-align: center !important;
+    max-width: 480px !important;
+    width: 100% !important;
+    background-color: {{ bg_color }} !important;
+    padding: 40px 32px !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25) !important;
+    box-sizing: border-box !important;
+  }
+  .av-heading {
+    color: {{ text_color }} !important;
+    font-size: 28px !important;
+    font-weight: bold !important;
+    margin: 0 0 16px 0 !important;
+    line-height: 1.2 !important;
+  }
+  .av-subtext {
+    color: {{ text_color }} !important;
+    font-size: 16px !important;
+    margin: 0 0 28px 0 !important;
+    line-height: 1.5 !important;
+  }
+  .av-buttons {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+  .av-btn {
+    appearance: none !important;
+    background-color: {{ button_color }} !important;
+    color: {{ bg_color }} !important;
+    border: 2px solid {{ button_color }} !important;
+    padding: 14px 20px !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    border-radius: 8px !important;
+    width: 100% !important;
+    transition: opacity 0.2s !important;
+    text-decoration: none !important;
+    display: block !important;
+    box-sizing: border-box !important;
+  }
+  .av-btn:hover {
+    opacity: 0.85 !important;
+  }
+  .av-btn-outline {
+    background-color: transparent !important;
+    color: {{ button_color }} !important;
+  }
+</style>
+
+<div id="av-overlay">
+  <div class="av-content">
+    <h2 class="av-heading">{{ heading }}</h2>
+    <p class="av-subtext">{{ subtext }}</p>
+    <div class="av-buttons">
+      <button id="av-btn-yes" class="av-btn">{{ yes_text }}</button>
+      <a id="av-btn-no" href="{{ redirect_url }}" class="av-btn av-btn-outline">{{ no_text }}</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    var cookieName = "av_verified";
+    var hasCookie = document.cookie.split('; ').find(function(row) {
+      return row.startsWith(cookieName + '=');
+    });
+    var overlay = document.getElementById('av-overlay');
+
+    if (!hasCookie && overlay) {
+      overlay.style.display = 'flex';
+      var yesBtn = document.getElementById('av-btn-yes');
+      if (yesBtn) {
+        yesBtn.addEventListener('click', function() {
+          var date = new Date();
+          date.setTime(date.getTime() + (30 * 24 * 60 * 60 * 1000));
+          document.cookie = cookieName + "=true; expires=" + date.toUTCString() + "; path=/";
+          
+          overlay.classList.add('av-hidden');
+          setTimeout(function() {
+            overlay.style.display = 'none';
+          }, 300);
+        });
+      }
+    }
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Age Verification",
+  "target": "body",
+  "settings": []
+}
+{% endschema %}
+</file>
+
 <file path="shopify.app.toml">
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "7a6da0c87974dddbddbdc6669bc3b2bc"
 name = "age-verification"
-application_url = "https://example.com"
+application_url = "https://age-verification-499228297904.asia-northeast1.run.app"
 embedded = true
 
 [build]
@@ -1871,7 +2007,12 @@ api_version = "2027-01"
 scopes = ""
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [ "https://age-verification-499228297904.asia-northeast1.run.app/auth/callback", "https://age-verification-499228297904.asia-northeast1.run.app/auth/shopify/callback" ]
+
+[webhooks.privacy_compliance]
+customer_data_request_url = "https://age-verification-499228297904.asia-northeast1.run.app/webhooks/customers/data_request"
+customer_redact_url = "https://age-verification-499228297904.asia-northeast1.run.app/webhooks/customers/redact"
+shop_redact_url = "https://age-verification-499228297904.asia-northeast1.run.app/webhooks/shop/redact"
 </file>
 
 </files>
